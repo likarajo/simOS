@@ -1,0 +1,20 @@
+
+If you still need some help on how to execute the simos.exe program 
+(my single process version), below are some hints.
+But you should read the program code and the handouot to understand
+simOS in depth.
+
+$ ./simos.exe
+command> s
+Submission file: prog.1
+...
+command> x
+...
+
+now you can type in those dump commands to observe the state of various 
+data structures of the system,
+or inputing x to continue executing prog.1,
+or inputing s to submit another program.
+
+Output of the programs are in terminal.out.
+
