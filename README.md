@@ -17,8 +17,8 @@ Simulate a computer system and implement a simple Operating System that manages 
 * CPU has a set of registers defined in *simos.h*
 * CPU performs computation on these registers implemented by function *cpu_execution* in *cpu.c*
 * Besides the *end-program* instruction, the corresponding datum for the instruction is fetched from memory and executed.<br>
-<img src="images/instruction.png" height=300 width=600 />
+<img src="images/instruction.png" height=250 width=600 /><br>
 * At the end of each instruction execution cycle, CPU checks the interrupt vector. 
   * If some interrupt bits are set, then the corresponding interrupt handling actions are performed by *handle_interrupt* in *cpu.c*.
   * 3 interrupt bits are defined in *simos.h*. The interrupt vector is initialized to 0. After completing interrupt handling, the interrupt vector is reset to 0.<br>
-  <img src="images/interrupt.png" height=300 width=600 />
+  <img src="images/interrupt.png" height=300 width=600 /><br>
