@@ -102,13 +102,13 @@ void cpu_execution ()
     { switch (CPU.IRopcode)
       { case OPload:
           // *** ADD CODE for the instruction
-          CPU.AC = get_data (CPU.IRoperand);
+          get_data (CPU.IRoperand); break;
         case OPadd:
           // *** ADD CODE for the instruction
-          CPU.AC = CPU.AC + get_data (CPU.IRoperand);
+          CPU.AC = CPU.AC + get_data (CPU.IRoperand); break;
         case OPmul:
           // *** ADD CODE for the instruction
-          CPU.AC = CPU.AC * get_data (CPU.IRoperand);
+          CPU.AC = CPU.AC * get_data (CPU.IRoperand); break;
         case OPifgo:  // conditional goto, need two instruction words
           // earlier, we got test variable in MBR and goto addr in IRoperand
             // Note: PC will be increased by 1, so need to set it to 1 less
@@ -119,6 +119,7 @@ void cpu_execution ()
           // print content to a printing string
           // send the string to terminal for printing
           // *** ADD CODE for the instruction
+          printf("%d", get_data (CPU.IRoperand)); break;
         case OPsleep:
           // *** ADD CODE for adding a timer event
           CPU.exeStatus = eWait; break;
