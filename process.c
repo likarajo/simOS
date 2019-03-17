@@ -19,6 +19,10 @@ void context_in (pid)
 void context_out (pid)
 { 
   // *** ADD CODE to save the context for the process to be switched out
+  PCB[pid].PC = CPU.PC;
+  PCB[pid].AC = CPU.AC;
+  PCB[pid].spoolPos = CPU.spoolPos;
+  PCB[pid].exeStatus = CPU.exeStatus;
 }
 
 
@@ -361,17 +365,21 @@ void execute_process ()
     // if exeStatus is not eReady, we need to switch out the process
     // and the time quantum timer (pointed by event) should be deactivated
     // otherwise, it has the potential of impacting exe of next process
-    // but if time quantum just expires when the above cases happends,
+    // but if time quantum just expires when the above cases happens,
     // event would have just been freed, our deactivation can be dangerous
   }
   else // no ready process in the system, so execute idle process
        // idle process will not have page fault, or go to wait state
-       // or encoutering error or terminate (it is infinite)
+       // or encountering error or terminate (it is infinite)
        // so after execution, no need to check these status
-       // only time quantum will stop idle process, and shoud use idleQuantum
+       // only time quantum will stop idle process, and should use idleQuantum
   { 
     // *** ADD CODE to run the idle process 
     //   (follow the code for running the regular process)
+    context_in (idlePid);
+    CPU.exeStatus = eRun;
+    add_timer (idleQuantum, CPU.Pid, actTQinterrupt, oneTimeTimer);
+    cpu_execution ();
   }
 }
 

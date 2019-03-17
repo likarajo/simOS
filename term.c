@@ -61,12 +61,15 @@ void dump_termio_queue ()
 
 // insert terminal queue is not inside the terminal thread, but called by
 // the main thread when terminal output is needed (only in cpu.c, process.c)
-void insert_termio (pid, outstr, type)
+void insert_termio (pid, outstr, type) {
 int pid, type;
 char *outstr;
-{ TermQnode *node;
+ TermQnode *node;
 
   if (Debug) printf ("Insert term queue %d %s\n", pid, outstr);
+
+  sem_wait(&mutex);
+
   node = (TermQnode *) malloc (sizeof (TermQnode));
   node->pid = pid;
   node->str = outstr;
@@ -75,7 +78,14 @@ char *outstr;
   if (termQtail == NULL) // termQhead would be NULL also
     { termQtail = node; termQhead = node; }
   else // insert to tail
-    { termQtail->next = node; termQtail = node; }
+    {
+    termQtail->next = node;
+    termQtail = node;
+    sem_post(&semaq);
+    }
+
+  sem_post(&mutex);
+
   if (Debug) dump_termio_queue ();
 }
 
@@ -85,6 +95,9 @@ void handle_one_termio ()
 { TermQnode *node;
 
   if (Debug) dump_termio_queue ();
+
+  sem_wait(&mutex);
+
   if (termQhead == NULL)
   { printf ("No process in terminal queue!!!\n"); }
   else 
@@ -99,6 +112,9 @@ void handle_one_termio ()
     termQhead = node->next;
     if (termQhead == NULL) termQtail = NULL;
     free (node->str); free (node);
+
+    sem_wait(&semaq);
+
     if (Debug) dump_termio_queue ();
   }
 }
@@ -132,6 +148,10 @@ void start_terminal ()
 { int ret;
 
   fterm = fopen ("terminal.out", "w");
+
+  sem_init(&semaq,0,0);
+  sem_init(&mutex,0,1);
+
   ret = pthread_create (&termThread, NULL, termIO, NULL);
   if (ret < 0) printf ("TermIO thread creation problem\n");
   else printf ("TermIO thread has been created successsfully\n");

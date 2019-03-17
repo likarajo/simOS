@@ -102,29 +102,51 @@ void cpu_execution ()
     { switch (CPU.IRopcode)
       { case OPload:
           // *** ADD CODE for the instruction
-          get_data (CPU.IRoperand); break;
+          CPU.AC = CPU.MBR;
+          break;
         case OPadd:
           // *** ADD CODE for the instruction
-          CPU.AC = CPU.AC + get_data (CPU.IRoperand); break;
+          CPU.AC = CPU.AC + CPU.MBR;
+          break;
         case OPmul:
           // *** ADD CODE for the instruction
-          CPU.AC = CPU.AC * get_data (CPU.IRoperand); break;
+          int temp = CPU.MBR;
+          int res = 0;
+          while (temp > 0) {
+            res = res+temp;
+            temp = temp-1;
+          }
+          CPU.AC = CPU.AC + res;
+          break;
         case OPifgo:  // conditional goto, need two instruction words
           // earlier, we got test variable in MBR and goto addr in IRoperand
             // Note: PC will be increased by 1, so need to set it to 1 less
           // *** ADD CODE for the instruction
+          if (CPU.MBR > 0){
+            CPU.PC = CPU.IRoperand - 1;
+          }
+          break;
         case OPstore:
-          put_data (CPU.IRoperand); break;
+          put_data (CPU.IRoperand);
+          break;
         case OPprint:
           // print content to a printing string
           // send the string to terminal for printing
           // *** ADD CODE for the instruction
-          printf("%d", get_data (CPU.IRoperand)); break;
+          sprintf (str, "%.2f\n", CPU.MBR);
+          spret = spool (str);
+          if (spret == spError){
+            CPU.exeStatus = eError;
+          }
+          break;
         case OPsleep:
           // *** ADD CODE for adding a timer event
-          CPU.exeStatus = eWait; break;
+          add_timer (CPU.IRoperand, CPU.Pid, actReadyInterrupt, oneTimeTimer);
+          CPU.exeStatus = eWait;
+          break;
         case OPend:
-          CPU.exeStatus = eEnd; break;
+          CPU.exeStatus = eEnd;
+          break;
         default:
           printf ("Illegitimate OPcode in process %d\n", CPU.Pid);
           CPU.exeStatus = eError;
