@@ -26,18 +26,20 @@ sem_t semaq;
 // for access the queue head and queue tail
 sem_t mutex;
 
-// *** ADD CODE, add semaphores to make sure 
+pthread_t termThread;
+
+// *** ADD CODE, add semaphores to make sure
 // 1. the system will not busy looping on null terminal queue
 // 2. terminal thread and main thread will not have conflict Q accesses
-// two semaphores needed are defined above, add sem_init, sem_wait, sem_post 
+// two semaphores needed are defined above, add sem_init, sem_wait, sem_post
 
 //=========================================================================
-// terminal output queue 
+// terminal output queue
 // implemented as a list with head and tail pointers
 //=========================================================================
 
 typedef struct TermQnodeStruct
-{ int pid, type;
+{ int pid, type, sockfd;
   char *str;
   struct TermQnodeStruct *next;
 } TermQnode;
@@ -61,10 +63,11 @@ void dump_termio_queue ()
 
 // insert terminal queue is not inside the terminal thread, but called by
 // the main thread when terminal output is needed (only in cpu.c, process.c)
-void insert_termio (pid, outstr, type) {
-int pid, type;
+void insert_termio (pid, outstr, type, sockfd)
+int pid, type, sockfd;
 char *outstr;
- TermQnode *node;
+{ TermQnode *node;
+
 
   if (Debug) printf ("Insert term queue %d %s\n", pid, outstr);
 
@@ -74,6 +77,7 @@ char *outstr;
   node->pid = pid;
   node->str = outstr;
   node->type = type;
+  node->sockfd = sockfd;
   node->next = NULL;
   if (termQtail == NULL) // termQhead would be NULL also
     { termQtail = node; termQhead = node; }
@@ -100,7 +104,7 @@ void handle_one_termio ()
 
   if (termQhead == NULL)
   { printf ("No process in terminal queue!!!\n"); }
-  else 
+  else
   { node = termQhead;
     terminal_output (node->pid, node->str);
     if (node->type != endIO)
@@ -131,8 +135,9 @@ void terminal_output (pid, outstr)
 int pid;
 char *outstr;
 {
-  fprintf (fterm, "%s\n", outstr);
-  fflush (fterm);
+  //fprintf (fterm, "%s\n", outstr);
+  send_client_result(pid, outstr);
+  //fflush (fterm);
   usleep (termPrintTime);
 }
 
@@ -142,12 +147,12 @@ void *termIO ()
   printf ("TermIO loop has ended\n");
 }
 
-pthread_t termThread;
+
 
 void start_terminal ()
 { int ret;
 
-  fterm = fopen ("terminal.out", "w");
+  //fterm = fopen ("terminal.out", "w");
 
   sem_init(&semaq,0,0);
   sem_init(&mutex,0,1);
@@ -160,7 +165,7 @@ void start_terminal ()
 void end_terminal ()
 { int ret;
 
-  fclose (fterm);
+  //fclose (fterm);
       // no problem if we post additional signals becuase
       // the null queue is always checked anyway
   ret = pthread_join (termThread, NULL);

@@ -14,12 +14,15 @@
 //===============================================================
 
 void one_submission ()
-{ char fname[100];
-
-  printf ("Submission file: ");
-  scanf ("%s", &fname);
-  if (Debug) printf ("File name: %s has been submitted\n", fname);
-  submit_process (fname);
+{
+//  char fname[100];
+//  printf ("Submission file: ");
+//  scanf ("%s", &fname);
+  request_t *req;
+  while ((req = dequeue()) != NULL){
+    if (Debug) printf ("File name: %s has been submitted\n", req->filename);
+    submit_process (req->filename);
+  }
 }
 
 void *process_submissions ()

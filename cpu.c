@@ -63,7 +63,8 @@ void handle_interrupt ()
 
 void cpu_execution ()
 { float sum, temp;
-  int mret, gotoaddr;
+  int mret, spret, gotoaddr;
+  char str[32];
 
   // perform all memory fetches, analyze memory conditions all here
   while (CPU.exeStatus == eRun)
@@ -72,7 +73,7 @@ void cpu_execution ()
     else if (mret == mPFault) CPU.exeStatus = ePFault;
     else if (CPU.IRopcode != OPend && CPU.IRopcode != OPsleep)
       // fetch data, but exclude OPend and OPsleep, which has no data
-    { mret = get_data (CPU.IRoperand); 
+    { mret = get_data (CPU.IRoperand);
       if (mret == mError) CPU.exeStatus = eError;
       else if (mret == mPFault) CPU.exeStatus = ePFault;
       else if (CPU.IRopcode == OPifgo)
@@ -95,7 +96,7 @@ void cpu_execution ()
               CPU.PC, CPU.IRopcode, CPU.IRoperand, CPU.AC, CPU.MBR);
     }
 
-    // if it is eError or eEnd, then does not matter 
+    // if it is eError or eEnd, then does not matter
     // if it is page fault, then AC, PC should not be changed
     // because the instruction should be re-executed
     if (CPU.exeStatus == eRun)
@@ -110,13 +111,13 @@ void cpu_execution ()
           break;
         case OPmul:
           // *** ADD CODE for the instruction
-          int temp = CPU.MBR;
-          int res = 0;
+          temp = CPU.MBR;
+          sum = 0;
           while (temp > 0) {
-            res = res+temp;
+            sum = sum+temp;
             temp = temp-1;
           }
-          CPU.AC = CPU.AC + res;
+          CPU.AC = CPU.AC + sum;
           break;
         case OPifgo:  // conditional goto, need two instruction words
           // earlier, we got test variable in MBR and goto addr in IRoperand
@@ -134,10 +135,6 @@ void cpu_execution ()
           // send the string to terminal for printing
           // *** ADD CODE for the instruction
           sprintf (str, "%.2f\n", CPU.MBR);
-          spret = spool (str);
-          if (spret == spError){
-            CPU.exeStatus = eError;
-          }
           break;
         case OPsleep:
           // *** ADD CODE for adding a timer event

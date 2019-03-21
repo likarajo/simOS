@@ -1,5 +1,8 @@
 //================= general definitions =========================
 
+int Active;
+    // control whether the system should remain active or terminate
+
 //#define Debug 1
 int Debug;
 
@@ -49,6 +52,7 @@ struct
   int exeStatus;
   unsigned interruptV;
   int numCycles;  // this is a global register, not for each process
+  int sockfd;
 } CPU;
 
 
@@ -77,10 +81,10 @@ struct
 // cpu function definitions
 
 void initialize_cpu ();  // called by system.c
-void dump_registers ();  
+void dump_registers ();
 void cpu_execution ();   // called by process.c
 
-void set_interrupt (unsigned bit);  
+void set_interrupt (unsigned bit);
      // called by clock.c for tqInterrup, memory.c  for ageInterrupt
      // called by clock.c for endWaitInterrupt (sleep)
      // called by term.c for endWaitInterrupt (termio)
@@ -105,13 +109,14 @@ typedef struct
       // it is useful if there is dynamic space used during run time
       // but here we do not consider it
   int timeUsed;
+  int sockfd;
 } typePCB;
 
 #define maxPCB 1024
 typePCB *PCB[maxPCB];
   // the system can have at most maxPCB processes,
   // maxProcess further confines it
-  // first process is OS, pid=0, second process is idle, pid = 1, 
+  // first process is OS, pid=0, second process is idle, pid = 1,
   // so, pid of any user process starts from 2
   // each process get a PCB, allocate PCB space upon process creation
 
@@ -122,10 +127,10 @@ int currentPid;    // user pid should start from 2, pid=0/1 are defined above
 
 // define process manipulation functions
 
-void dump_PCB (int pid); 
+void dump_PCB (int pid);
 void dump_ready_queue ();
 
-void insert_endWait_process (int pid); 
+void insert_endWait_process (int pid);
      // called by clock.c (sleep), term.c (output), memory.c (page fault)
      // need semaphore protection for the endWait queue access
 void endWait_moveto_ready ();
@@ -145,7 +150,7 @@ void execute_process ();  // called by admin.c
 
 // memory read/write function definitions
 
-int get_data (int offset); 
+int get_data (int offset);
 int put_data (int offset);
 int get_instruction (int offset);
   // only cpu.c for the above 3 functions
@@ -162,7 +167,7 @@ void dump_memory (int pid);
 // memory management functions
 
 int allocate_memory (int pid, int msize, int numinstr);
-int free_memory (int pid);  // only called by process.c 
+int free_memory (int pid);  // only called by process.c
 
 void memory_agescan ();  // called by cpu.c after age scan interrupt
 
@@ -186,11 +191,11 @@ void end_swap_manager ();
 #define actNull 0
 
 // define the clock function
-void advance_clock ();  
+void advance_clock ();
      // called by cpu.c to advance instruction cycle based clock
 
-// define the timer functions 
-void dump_events ();  
+// define the timer functions
+void dump_events ();
 void initialize_timer ();  // called by system.c
 genericPtr add_timer (int time, int pid, int action, int recurperiod);
            // called by process.c for time quantum,
@@ -205,20 +210,40 @@ void deactivate_timer (genericPtr castedevent);
 #define regularIO 1   // indicate that this is a regular IO
 #define endIO 0   // indicate that this is the end process IO
 
-void insert_termio (int pid, char *outstr, int status);
+void insert_termio (int pid, char *outstr, int status, int sockfd);
      // called by cpu.c for print instruction, process.c for end process print
      // need semaphore protection for the endWait queue access
-void dump_termio_queue ();  
+void dump_termio_queue ();
 void start_terminal ();  // called by system.c
 void end_terminal ();  // called by system.c
 
 
-//=============== other modules ====================
-// admin.c submit.c 
+//=============== admin.c related definitions ====================
 
 void process_admin_command ();
+
+
+//=============== submit.c related definitions ===================
+
+typedef struct request
+{ int sockfd;
+  char* client_id;
+  char* filename;
+  int port;
+} request_t;
+
+typedef struct node
+{ request_t request;
+  struct node *next;
+} node_t;
+
 void start_client_submission ();
 void end_client_submission ();
 void one_submission ();
+
+//============== queue.c related definitions ======================
+
+void enqueue(request_t req);
+request_t* dequeue();
 
 

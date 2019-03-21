@@ -14,15 +14,16 @@ void context_in (pid)
   CPU.MDbase = PCB[pid]->MDbase;
   CPU.Mbound = PCB[pid]->Mbound;
   CPU.exeStatus = PCB[pid]->exeStatus;
+  CPU.sockfd = PCB[pid]->sockfd;
 }
 
 void context_out (pid)
-{ 
+{
   // *** ADD CODE to save the context for the process to be switched out
-  PCB[pid].PC = CPU.PC;
-  PCB[pid].AC = CPU.AC;
-  PCB[pid].spoolPos = CPU.spoolPos;
-  PCB[pid].exeStatus = CPU.exeStatus;
+  PCB[pid]->PC = CPU.PC;
+  PCB[pid]->AC = CPU.AC;
+  PCB[pid]->exeStatus = CPU.exeStatus;
+  PCB[pid]->sockfd = CPU.sockfd;
 }
 
 
@@ -38,6 +39,7 @@ void context_out (pid)
 
 typedef struct ReadyNodeStruct
 { int pid;
+int sockfd;
   struct ReadyNodeStruct *next;
 } ReadyNode;
 
@@ -64,9 +66,9 @@ int get_ready_process ()
 
   if (readyHead == NULL)
   { printf ("No ready process now!!!\n");
-    return (nullReady); 
+    return (nullReady);
   }
-  else 
+  else
   { pid = readyHead->pid;
     rnode = readyHead;
     readyHead = rnode->next;
@@ -142,7 +144,7 @@ void dump_endWait_list ()
 }
 
 //=========================================================================
-// Some support functions for PCB 
+// Some support functions for PCB
 // PCB related definitions are in simos.h
 //=========================================================================
 
@@ -219,7 +221,7 @@ int pid;
 {
   free_memory (pid);
   free_PCB (pid);  // PCB has to be freed last, other frees use PCB info
-} 
+}
 
 void end_process (pid)
 int pid;
@@ -230,12 +232,12 @@ int pid;
   char *str = (char *) malloc (80);
   if (CPU.exeStatus == eError)
   { printf ("Process %d has an error, dumping its states\n", pid);
-    dump_PCB (pid); dump_memory (pid); 
+    dump_PCB (pid); dump_memory (pid);
     sprintf (str, "Process %d had encountered error in execution!!!\n", pid);
   }
   else  // was eEnd
   { sprintf (str, "Process %d had completed successfully!!!\n", pid); }
-  insert_termio (pid, str, endIO);
+  insert_termio (pid, str, endIO, PCB[pid]->sockfd);
 
   // invoke io to print str, process has terminated, so no wait state
 

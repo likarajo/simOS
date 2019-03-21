@@ -40,6 +40,7 @@ void process_admin_command ()
         break;
       case 'T':  // Terminate, do nothing, terminate in while loop
         systemActive = 0;
+        exit(0);
         break;
       default:   // can be used to yield to client submission input
         printf ("Incorrect command!!!\n");
