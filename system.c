@@ -20,7 +20,6 @@ void initialize_system ()
   // all processing has a while loop on systemActive
   // admin with T command can stop the system
   systemActive = 1;
-  Debug = 1;
 
   initialize_timer ();
   initialize_cpu ();
