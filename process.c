@@ -241,13 +241,13 @@ int pid;
 
   // invoke io to print str, process has terminated, so no wait state
 
-  clean_process (pid); 
+  clean_process (pid);
     // cpu will clean up process pid without waiting for printing to finish
     // so, io should not access PCB[pid] for end process printing
 }
 
 void init_idle_process ()
-{ 
+{
   // create and initialize PCB for the idle process
   PCB[idlePid] = (typePCB *) malloc ( sizeof(typePCB) );
   allocate_memory (idlePid, idleMsize, idleNinstr);
@@ -271,15 +271,15 @@ void initialize_process ()
 {
   init_idle_process ();
   currentPid = 2;  // the next pid value to be used
-  
+
 }
 
-// submit_process always working on a new pid and the new pid will not be 
+// submit_process always working on a new pid and the new pid will not be
 // used by anyone else till submit_process finishes working on it
 // currentPid is not used by anyone else but the dump functions
 // So, no conflict for PCB and Pid related data
 // But during insert_ready_process, there is potential of conflict accesses
-void submit_process (fname)
+void submit_process (fname, sockfd)
 char *fname;
 {
   FILE *fprog;
@@ -305,7 +305,7 @@ char *fname;
   ret = allocate_memory (pid, msize, numinstr);
   if (ret == mError) { PCB[pid]->exeStatus = eError; return; }
 
-  // initialize PCB 
+  // initialize PCB
   //   memory related info has been initialized in memory.c
   //   Pid has been initialized in new_PCB
   PCB[pid]->PC = 0;
@@ -314,6 +314,7 @@ char *fname;
   PCB[pid]->numInstr = numinstr;
   PCB[pid]->numStaticData = numdata;
   PCB[pid]->numData = numdata;
+  PCB[pid]->sockfd = sockfd;
   if (Debug) dump_PCB (pid);
 
   // load instructions and data of the process to memory 

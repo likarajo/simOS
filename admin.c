@@ -12,9 +12,10 @@ void process_admin_command ()
     if (Debug) printf ("Command is %c\n", action[0]);
     // only first action character counts, discard remainder
     switch (action[0])
-    { case 's':  // submit
+    {
+      /*case 's':  // submit
          one_submission ();
-         break;
+         break;*/
       case 'x':  // execute
         execute_process ();
         break;

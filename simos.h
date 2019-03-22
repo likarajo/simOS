@@ -138,7 +138,7 @@ void endWait_moveto_ready ();
 void dump_endWait_list ();
 
 void initialize_process ();  // called by system.c
-void submit_process (char* fname);  // called by submit.c
+void submit_process (char* fname, int sockfd);  // called by submit.c / reqhandler.c
 void execute_process ();  // called by admin.c
 
 
@@ -227,21 +227,22 @@ void process_admin_command ();
 
 typedef struct request
 { int sockfd;
-  char* client_id;
+  //char* client_id;
   char* filename;
   int port;
 } request_t;
-
-typedef struct node
-{ request_t request;
-  struct node *next;
-} node_t;
 
 void start_client_submission ();
 void end_client_submission ();
 void one_submission ();
 
 //============== queue.c related definitions ======================
+
+
+typedef struct node
+{ request_t request;
+  struct node *next;
+} node_t;
 
 void enqueue(request_t req);
 request_t* dequeue();

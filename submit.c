@@ -15,20 +15,19 @@
 
 void one_submission ()
 {
-//  char fname[100];
-//  printf ("Submission file: ");
-//  scanf ("%s", &fname);
-  request_t *req;
-  while ((req = dequeue()) != NULL){
-    if (Debug) printf ("File name: %s has been submitted\n", req->filename);
-    submit_process (req->filename);
-  }
+  char fname[100];
+  printf ("Submission file: ");
+  scanf ("%s", &fname);
+  if (Debug) printf ("File name: %s has been submitted\n", fname);
+  //submit_process (fname);
+
 }
 
 void *process_submissions ()
 { char action;
   char fname[100];
 
+  initialize_socket();
   while (systemActive) one_submission ();
   printf ("Client submission interface loop has ended!\n");
 }
@@ -36,12 +35,13 @@ void *process_submissions ()
 // submission thread is not activated due to input competition
 pthread_t submissionThread;
 
+//void start_client_submission ()
 void start_client_submission ()
 { int ret;
 
   ret = pthread_create (&submissionThread, NULL, process_submissions, NULL);
   if (ret < 0) printf ("Client submission thread creation problem\n");
-  else printf ("Client submission interface has been created successsfully\n");
+  else printf ("Client submission interface has been created successfully\n");
 }
 
 void end_client_submission ()

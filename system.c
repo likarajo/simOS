@@ -43,13 +43,13 @@ void main (int argc, char *argv[])
   start_terminal ();   // term.c
   start_swap_manager ();
   //start_client_submission (); // submit.c
-  start_client_reqhandler(argv[1]); // reqhandler.c
+  start_client_reqhandler(argv[1]);
 
   process_admin_command ();   // admin.c
 
   // admin terminated the system, wait for other components to terminate
-  end_client_reqhandler(); // reqhandler.c
   //end_client_submission ();   // submit.c
+  end_client_reqhandler();
   end_swap_manager ();
   end_terminal ();   // term.c
 

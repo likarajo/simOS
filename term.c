@@ -135,9 +135,11 @@ void terminal_output (pid, outstr)
 int pid;
 char *outstr;
 {
-  //fprintf (fterm, "%s\n", outstr);
-  send_client_result(pid, outstr);
-  //fflush (fterm);
+  fprintf (fterm, "%s\n", outstr);
+  fflush (fterm);
+
+//  send_client_result(pid, outstr);
+
   usleep (termPrintTime);
 }
 

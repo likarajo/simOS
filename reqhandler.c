@@ -30,14 +30,15 @@ void send_client_result(request_t *req, int pid, int result)
 void read_from_client(int fd)
 { char buffer[256];
   int ret, result;
-  char *client_id, *filename, *token;
+//  char *client_id, *filename, *token;
+  char *filename;
   request_t *req;
   struct sockaddr_in cli_addr;
   socklen_t cli_addrlen = sizeof(cli_addr);
 
   bzero(buffer, sizeof(buffer));
-  token = NULL;
-  client_id = NULL;
+  //token = NULL;
+  //client_id = NULL;
   filename = NULL;
   req = NULL;
 
@@ -46,10 +47,10 @@ void read_from_client(int fd)
 
   /*token = strtok(buffer, " ");
   client_id = (char *)malloc(strlen(token));
-  strcpy(client_id, token);*/
-  token = strtok(NULL, " ");
-  filename = (char *)malloc(strlen(token));
-  strcpy(filename, token);
+  strcpy(client_id, token);
+  token = strtok(NULL, " ");*/
+  filename = (char *)malloc(strlen(buffer));
+  strcpy(filename, buffer);
 
   if (strcmp(filename, "nullfile") == 0)
   { close(fd);
@@ -57,15 +58,16 @@ void read_from_client(int fd)
   }
   else
   { getpeername(fd, (struct sockaddr *)&cli_addr, &cli_addrlen);
-    req = malloc(sizeof(request_t));
+    /*req = malloc(sizeof(request_t));
     req->sockfd = fd;
     req->client_id = client_id;
     req->filename = filename;
     req->port = (int)cli_addr.sin_port;
-
     enqueue(*req);
-    //printf ("Received from %d file name %s\n", client_id, filename);
-    printf ("Received file name %s\n", filename);
+    printf ("Received from %d file name %s\n", client_id, filename);*/
+
+    submit_process (filename, fd);
+
   }
 }
 
@@ -95,7 +97,9 @@ void initialize_socket(int portno)
   if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     error("ERROR binding");
 
-  listen(sockfd, 5);
+  if (listen(sockfd, 5) < 0)
+    error("ERROR listening");
+
 }
 
 void socket_select()
@@ -120,13 +124,38 @@ void socket_select()
   }
 }
 
+void handle_client (){
+  int newsockfd, ret, clilen;
+  struct sockaddr_in cli_addr;
+  char buffer[256];
+  char filename[256];
+
+  clilen = sizeof(cli_addr);
+  newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+  if (newsockfd < 0) error("ERROR accepting");
+  else printf("Accept client socket %d, %d\n", newsockfd, (int)cli_addr.sin_port);
+
+  bzero(buffer, sizeof(buffer));
+  bzero(filename, sizeof(filename));
+
+  ret = recv(newsockfd, buffer, sizeof(buffer), 0);
+  if (ret < 0) error("Server ERROR reading from socket");
+  else strcpy(filename, buffer);
+
+  if (strcmp(filename, "nullfile") == 0) close(newsockfd);
+  else submit_process (filename, newsockfd);
+
+}
+
 void *client_reqhandler(void *arg)
 { char *port = (char *)arg;
   int portno;
-
   portno = atoi(port);
+
   initialize_socket (portno);
-  socket_select ();
+  while (systemActive) handle_client ();
+  printf ("Client submission interface loop has ended!\n");
+
 }
 
 //======================================================
