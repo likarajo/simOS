@@ -3,7 +3,8 @@
 int Active;
     // control whether the system should remain active or terminate
 
-#define Debug 1
+//#define Debug 1
+int Debug;
 
 typedef unsigned *genericPtr;
           // when passing pointers externally, use genericPtr
