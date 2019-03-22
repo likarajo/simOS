@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "simos.h"
 
 
@@ -31,7 +32,7 @@ void initialize_system ()
 // initialize system mainly intialize data structures of each component.
 // start_terminal, process_client_submission, process_admin_command are
 // system operations and are started in main.
-void main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
 
   if (argc < 2){
@@ -52,5 +53,7 @@ void main (int argc, char *argv[])
   end_client_reqhandler();
   end_swap_manager ();
   end_terminal ();   // term.c
+
+  return 0;
 
 }

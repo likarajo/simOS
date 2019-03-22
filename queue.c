@@ -36,9 +36,11 @@ void dump_queue()
   printf("Dump Request Queue:\n");
   current = head;
   while (current != NULL)
-  { printf("%s, %s, %d, %d\n",
-            current->request.client_id, current->request.filename,
-            current->request.sockfd, current->request.port);
+  { printf("%s, %d, %d\n",
+            //current->request.client_id,
+            current->request.filename,
+            current->request.sockfd,
+            current->request.port);
     current = current->next;
   }
 }

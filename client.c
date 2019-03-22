@@ -11,7 +11,7 @@ void error(char *msg)
   exit(0);
 }
 
-void main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
   int sockfd, portno, ret;
   struct sockaddr_in serv_addr;
   struct hostent *server;
@@ -70,4 +70,6 @@ void main(int argc, char *argv[]) {
     if (ret < 0) error("Client ERROR reading from socket");
     printf("%s\n", buffer);
   }
+
+  return 0;
 }

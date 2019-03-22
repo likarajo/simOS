@@ -236,6 +236,11 @@ void start_client_submission ();
 void end_client_submission ();
 void one_submission ();
 
+//=============== reqhandler.c related definitions ===================
+
+void start_client_handler (char *port);
+void end_client_handler ();
+
 //============== queue.c related definitions ======================
 
 
