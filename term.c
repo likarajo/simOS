@@ -13,10 +13,10 @@
 // The terminal can only put process in endWait queue and set the interrupt.
 //=========================================================================
 
-FILE *fterm;
+//FILE *fterm;
 // terminal output file (on terminal would cause garbled output)
 
-void terminal_output (int pid, char *outstr);
+void terminal_output (int pid, char *outstr, int sockfd);
 
 // if terminal queue is empty, wait on semaq
 // for each insersion, signal semaq
@@ -55,7 +55,7 @@ void dump_termio_queue ()
   printf ("******************** Term Queue Dump\n");
   node = termQhead;
   while (node != NULL)
-    { printf ("%d, %s\n", node->pid, node->str);
+    { printf ("[%d, %s] ", node->pid, node->str);
       node = node->next;
     }
   printf ("\n");
@@ -66,12 +66,15 @@ void dump_termio_queue ()
 void insert_termio (pid, outstr, type, sockfd)
 int pid, type, sockfd;
 char *outstr;
-{ TermQnode *node;
-
-
-  if (Debug) printf ("Insert term queue %d %s\n", pid, outstr);
+{
 
   sem_wait(&mutex);
+
+  TermQnode *node;
+
+
+
+  if (Debug) printf ("Inserting PID:%d RES:%s SOCK:%d to TermQueue\n", pid, outstr, sockfd);
 
   node = (TermQnode *) malloc (sizeof (TermQnode));
   node->pid = pid;
@@ -79,18 +82,28 @@ char *outstr;
   node->type = type;
   node->sockfd = sockfd;
   node->next = NULL;
+
+  //if (Debug) printf ("New node created\n");
+
   if (termQtail == NULL) // termQhead would be NULL also
-    { termQtail = node; termQhead = node; }
+    {
+    termQtail = node;
+    termQhead = node;
+    }
   else // insert to tail
     {
     termQtail->next = node;
     termQtail = node;
-    sem_post(&semaq);
     }
+
+  //if (Debug) printf("New node inserted into TermQueue\n");
+
+  if (Debug) dump_termio_queue ();
 
   sem_post(&mutex);
 
-  if (Debug) dump_termio_queue ();
+  sem_post(&semaq);
+
 }
 
 // remove the termIO job from queue and call terminal_output for printing
@@ -98,29 +111,34 @@ char *outstr;
 void handle_one_termio ()
 { TermQnode *node;
 
-  if (Debug) dump_termio_queue ();
+  //if (Debug) dump_termio_queue ();
 
-  sem_wait(&mutex);
+  if (Debug) printf("Handling one IO\n");
 
   if (termQhead == NULL)
   { printf ("No process in terminal queue!!!\n"); }
   else
   { node = termQhead;
-    terminal_output (node->pid, node->str);
+
+    terminal_output (node->pid, node->str, node->sockfd);
+
     if (node->type != endIO)
     { insert_endWait_process (node->pid);
       set_interrupt (endWaitInterrupt);
-    }   // if it is the endIO type, then job done, just clean termio queue
-
-    if (Debug) printf ("Remove term queue %d %s\n", node->pid, node->str);
+    }
+    // if it is the endIO type, then job done, just clean termio queue
+    if (Debug) printf ("Removing the node [ %d %s ] from TermQueue\n", node->pid, node->str);
     termQhead = node->next;
     if (termQhead == NULL) termQtail = NULL;
     free (node->str); free (node);
+    if (Debug) printf ("Node freed\n");
 
-    sem_wait(&semaq);
+    if (Debug) printf("Handling one IO Completed\n");
 
-    if (Debug) dump_termio_queue ();
+    //if (Debug) dump_termio_queue ();
+
   }
+
 }
 
 
@@ -131,25 +149,29 @@ void handle_one_termio ()
 
 // pretent to take a certain amount of time by sleeping printTime
 // output is now simply printf, but it should be sent to client terminal
-void terminal_output (pid, outstr)
-int pid;
+void terminal_output (pid, outstr, sockfd)
+int pid, sockfd;
 char *outstr;
 {
-  fprintf (fterm, "%s\n", outstr);
-  fflush (fterm);
+  /*fprintf (fterm, "%s\n", outstr);
+  fflush (fterm);*/
 
-//  send_client_result(pid, outstr);
+  send_client_result(pid, outstr, sockfd);
 
   usleep (termPrintTime);
 }
 
 void *termIO ()
 {
-  while (systemActive) handle_one_termio ();
-  printf ("TermIO loop has ended\n");
+  //while (systemActive) {
+    sem_wait(&semaq);
+    sem_wait(&mutex);
+    handle_one_termio ();
+    sem_post(&mutex);
+
+    printf ("TermIO loop has ended\n");
+  //}
 }
-
-
 
 void start_terminal ()
 { int ret;
@@ -161,7 +183,9 @@ void start_terminal ()
 
   ret = pthread_create (&termThread, NULL, termIO, NULL);
   if (ret < 0) printf ("TermIO thread creation problem\n");
-  else printf ("TermIO thread has been created successsfully\n");
+  if (Debug) printf ("TermIO thread has been created successsfully\n");
+
+
 }
 
 void end_terminal ()

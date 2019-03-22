@@ -7,8 +7,8 @@ void process_admin_command ()
 { char action[10];
   char fname[100];
 
-  while (systemActive)
-  { printf ("command> ");
+  while (systemActive){
+    printf ("command> ");
     scanf ("%s", &action);
     if (Debug) printf ("Command is %c\n", action[0]);
     // only first action character counts, discard remainder
@@ -42,13 +42,17 @@ void process_admin_command ()
         break;
       case 'T':  // Terminate, do nothing, terminate in while loop
         systemActive = 0;
+        // admin terminated the system, wait for other components to terminate
+        //end_client_submission ();   // submit.c
+        end_swap_manager ();
+        end_terminal ();   // term.c
+        close_socks(); // rehandler.c
         exit(0);
-        break;
       default:   // can be used to yield to client submission input
         printf ("Incorrect command!!!\n");
     }
   }
-  printf ("Admin command processing loop ended!\n");
+  //printf ("Admin command processing loop ended!\n");
 }
 
 

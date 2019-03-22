@@ -34,6 +34,7 @@ void dump_registers ()
   printf ("exeStatus = %d\n", CPU.exeStatus);
   printf ("InterruptV = %x\n", CPU.interruptV);
   printf ("numCycles = %d\n", CPU.numCycles);
+  printf ("sockfd = %d\n", CPU.sockfd);
 }
 
 void set_interrupt (bit)
@@ -47,7 +48,7 @@ void handle_interrupt ()
   if ((CPU.interruptV & ageInterrupt) == ageInterrupt)
     memory_agescan ();
   if ((CPU.interruptV & endWaitInterrupt) == endWaitInterrupt)
-    endWait_moveto_ready ();  
+    endWait_moveto_ready ();
      // interrupt may overwrite, move all IO done processes (maybe more than 1)
   if ((CPU.interruptV & tqInterrupt) == tqInterrupt)
     if (CPU.exeStatus == eRun) CPU.exeStatus = eReady;
@@ -55,9 +56,9 @@ void handle_interrupt ()
 
   // all interrupt bits have been taken care of, reset vector
   CPU.interruptV = 0;
-  if (Debug) 
+  if (Debug)
     printf ("Interrup handler: pid = %d; interrupt = %x; exeStatus = %d\n",
-            CPU.Pid, CPU.interruptV, CPU.exeStatus); 
+            CPU.Pid, CPU.interruptV, CPU.exeStatus);
 }
 
 
@@ -134,7 +135,8 @@ void cpu_execution ()
           // print content to a printing string
           // send the string to terminal for printing
           // *** ADD CODE for the instruction
-          sprintf (str, "%.2f\n", CPU.MBR);
+          sprintf (str, "%.2f", CPU.MBR);
+          insert_termio (CPU.Pid, str, regularIO, CPU.sockfd);
           break;
         case OPsleep:
           // *** ADD CODE for adding a timer event

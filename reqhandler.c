@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include "simos.h"
 
-int sockfd;
+int sockfd, newsockfd;
 fd_set active_fd_set;
 
 void error(char *msg)
@@ -16,15 +16,16 @@ void error(char *msg)
 }
 
 //void send_client_result(request_t *req, int result)
-void send_client_result(request_t *req, int pid, int result)
+void send_client_result(int pid, char *outstr, int sockfd)
 { char buffer[256];
   int ret;
 
   bzero(buffer, sizeof(buffer));
   //sprintf(buffer, "%s %d", req->client_id, result);
-  sprintf(buffer, "%d %d", pid, result);
-  ret = send(req->sockfd, buffer, sizeof(buffer), 0);
+  sprintf(buffer, "%s", outstr);
+  ret = send(sockfd, buffer, sizeof(buffer), 0);
   if (ret < 0) error("Server ERROR writing to socket");
+  else printf("Sent output %s to client socket %d\n", buffer, sockfd);
 }
 
 void read_from_client(int fd)
@@ -40,7 +41,7 @@ void read_from_client(int fd)
   //token = NULL;
   //client_id = NULL;
   filename = NULL;
-  req = NULL;
+  //req = NULL;
 
   ret = recv(fd, buffer, sizeof(buffer), 0);
   if (ret < 0) error("Server ERROR reading from socket");
@@ -51,6 +52,8 @@ void read_from_client(int fd)
   token = strtok(NULL, " ");*/
   filename = (char *)malloc(strlen(buffer));
   strcpy(filename, buffer);
+
+  printf("Received file %s from client %d\n", filename, fd);
 
   if (strcmp(filename, "nullfile") == 0)
   { close(fd);
@@ -79,7 +82,7 @@ void accept_client()
   newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
   if (newsockfd < 0) error("ERROR accepting");
   else
-  { printf("Accept client socket %d, %d\n", newsockfd, (int)cli_addr.sin_port);
+  { printf("\nAccept client socket %d, %d\n", newsockfd, (int)cli_addr.sin_port);
     FD_SET(newsockfd, &active_fd_set);
   }
 }
@@ -125,7 +128,7 @@ void socket_select()
 }
 
 void handle_client (){
-  int newsockfd, ret, clilen;
+  int ret, clilen;
   struct sockaddr_in cli_addr;
   char buffer[256];
   char filename[256];
@@ -133,7 +136,9 @@ void handle_client (){
   clilen = sizeof(cli_addr);
   newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
   if (newsockfd < 0) error("ERROR accepting");
-  else printf("Accept client socket %d, %d\n", newsockfd, (int)cli_addr.sin_port);
+  else {
+    printf("\nAccepted client socket %d, port %d\n", newsockfd, (int)cli_addr.sin_port);
+  }
 
   bzero(buffer, sizeof(buffer));
   bzero(filename, sizeof(filename));
@@ -142,9 +147,22 @@ void handle_client (){
   if (ret < 0) error("Server ERROR reading from socket");
   else strcpy(filename, buffer);
 
-  if (strcmp(filename, "nullfile") == 0) close(newsockfd);
-  else submit_process (filename, newsockfd);
+  printf("Received file %s from client socket %d\n", filename, newsockfd);
 
+  if (strcmp(filename, "nullfile") == 0) {
+    close(newsockfd);
+    if(Debug) printf("Closed client socket %d\n", newsockfd);
+  }
+  else {
+    if(Debug) printf("Submitted file %s to be processed\n", filename);
+    submit_process (filename, newsockfd);
+  }
+
+}
+
+void close_socks(){
+   close(newsockfd);
+   close(sockfd);
 }
 
 void *client_reqhandler(void *arg)
@@ -164,8 +182,8 @@ pthread_t thid;
 
 void start_client_reqhandler(char *port)
 { int ret;
-    ret = pthread_create(&thid, NULL, client_reqhandler, (void *)port);
-    if (ret < 0) printf("%s\n", "thread creation problem");
+  ret = pthread_create(&thid, NULL, client_reqhandler, (void *)port);
+  if (ret < 0) printf("%s\n", "thread creation problem");
 }
 
 void end_client_reqhandler()

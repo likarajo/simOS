@@ -51,13 +51,20 @@ int main(int argc, char *argv[]) {
     sprintf(buffer, "%s", cin);
 
     ret = send(sockfd, buffer, strlen(buffer), 0);
-    if (ret < 0) error("ERROR writing to socket");
+    if (ret < 0) error("ERROR writing to socket\n");
 
     bzero(buffer, sizeof(buffer));
     ret = recv(sockfd, buffer, sizeof(buffer), 0);
-    if (ret == 0) break;
+    if(ret < 0) error("ERROR reading from socket\n");
 
-    token = strtok(buffer, " ");
+    if (strncmp(buffer, "End Proc", 256)==0) {
+        printf("Disconnected\n");
+        exit(0);
+    }
+
+    printf("%s\n", buffer);
+
+    /*token = strtok(buffer, " ");
     pid = (char *)malloc(strlen(token));
     strcpy(pid, token);
     token = strtok(NULL, " ");
@@ -65,10 +72,8 @@ int main(int argc, char *argv[]) {
     strcpy(result, token);
 
     bzero(buffer, sizeof(buffer));
-    sprintf(buffer, "%s %s", pid, result);
+    sprintf(buffer, "%s %s", pid, result);*/
 
-    if (ret < 0) error("Client ERROR reading from socket");
-    printf("%s\n", buffer);
   }
 
   return 0;

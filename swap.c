@@ -171,14 +171,14 @@ void start_swap_manager ()
   // initialize other needed parameters
   // create a thread to perform the swap manager tasks 
   // i.e., create a thread that executes process_swapQ
-  printf ("Swap space managr has been activated.\n");
+  if (Debug) printf ("Swap space managr has been activated.\n");
 }
 
 void end_swap_manager ()
 {
   close (diskfd);
   // wait for thread to finish by calling pthread_join
-  printf ("Swap space managr has terminated successfully.\n");
+  if (Debug) printf ("Swap space managr has terminated successfully.\n");
 }
 
 

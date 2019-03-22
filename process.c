@@ -185,6 +185,7 @@ int pid;
   printf ("numInstr = %d\n", PCB[pid]->numInstr);
   printf ("numData = %d\n", PCB[pid]->numData);
   printf ("numStaticData = %d\n", PCB[pid]->numStaticData);
+  printf ("sockfd = %d\n", PCB[pid]->sockfd);
 }
 
 void dump_PCB_list ()
@@ -236,14 +237,17 @@ int pid;
     sprintf (str, "Process %d had encountered error in execution!!!\n", pid);
   }
   else  // was eEnd
-  { sprintf (str, "Process %d had completed successfully!!!\n", pid); }
+  { sprintf (str, "End Proc\n"); }
   insert_termio (pid, str, endIO, PCB[pid]->sockfd);
+  if(Debug) printf("End of process %d, %s sent to %d\n", pid, str, PCB[pid]->sockfd);
 
   // invoke io to print str, process has terminated, so no wait state
 
   clean_process (pid);
     // cpu will clean up process pid without waiting for printing to finish
     // so, io should not access PCB[pid] for end process printing
+
+  printf("Waiting for new command...\n");
 }
 
 void init_idle_process ()

@@ -20,6 +20,7 @@ void initialize_system ()
   // all processing has a while loop on systemActive
   // admin with T command can stop the system
   systemActive = 1;
+  Debug = 1;
 
   initialize_timer ();
   initialize_cpu ();
@@ -43,16 +44,9 @@ int main (int argc, char *argv[])
   initialize_system ();
   start_terminal ();   // term.c
   start_swap_manager ();
-  //start_client_submission (); // submit.c
-  start_client_reqhandler(argv[1]);
+  start_client_reqhandler(argv[1]); // reqhandler.c
 
   process_admin_command ();   // admin.c
-
-  // admin terminated the system, wait for other components to terminate
-  //end_client_submission ();   // submit.c
-  end_client_reqhandler();
-  end_swap_manager ();
-  end_terminal ();   // term.c
 
   return 0;
 
