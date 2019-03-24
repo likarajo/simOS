@@ -237,7 +237,7 @@ int pid;
     sprintf (str, "Process %d had encountered error in execution!!!\n", pid);
   }
   else  // was eEnd
-  { sprintf (str, "End Proc\n"); }
+  { sprintf (str, "End Proc"); }
   insert_termio (pid, str, endIO, PCB[pid]->sockfd);
   if(Debug) printf("End of process %d, %s sent to %d\n", pid, str, PCB[pid]->sockfd);
 

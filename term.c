@@ -78,7 +78,9 @@ char *outstr;
 
   node = (TermQnode *) malloc (sizeof (TermQnode));
   node->pid = pid;
-  node->str = outstr;
+  //node->str = outstr;
+  node->str = malloc(50);
+  sprintf(node->str, "%s", outstr);
   node->type = type;
   node->sockfd = sockfd;
   node->next = NULL;
@@ -111,6 +113,8 @@ char *outstr;
 void handle_one_termio ()
 { TermQnode *node;
 
+  sem_wait(&mutex);
+
   //if (Debug) dump_termio_queue ();
 
   if (Debug) printf("Handling one IO\n");
@@ -139,6 +143,8 @@ void handle_one_termio ()
 
   }
 
+  sem_post(&mutex);
+
 }
 
 
@@ -156,21 +162,21 @@ char *outstr;
   /*fprintf (fterm, "%s\n", outstr);
   fflush (fterm);*/
 
-  send_client_result(pid, outstr, sockfd);
+  char str[50];
+
+  sprintf(str, "%s", outstr);
+  send_client_result(pid, str, sockfd);
 
   usleep (termPrintTime);
 }
 
 void *termIO ()
 {
-  //while (systemActive) {
+  while (systemActive) {
     sem_wait(&semaq);
-    sem_wait(&mutex);
     handle_one_termio ();
-    sem_post(&mutex);
-
     printf ("TermIO loop has ended\n");
-  //}
+  }
 }
 
 void start_terminal ()
